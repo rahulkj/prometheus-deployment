@@ -6,12 +6,13 @@ Prometheus Operator to Monitor PKS k8s cluster
 * Copy the `.envrc.example` and create a `.envrc` file.
 * Fill in the values for:
 ```
-  - export OM_KEY=/Users/user/Documents/secrets/om.key  # Path to the ops manager ssh key
-  - export OM_ENV=/Users/user/Documents/secrets/env.yml # Path to the ops manager env.yml, that has the target, username, password and skip-ssl-validation params.
-  - export NAMESPACE=monitoring # Namespace to add/upgrade the prometheus-operator
-  - export CLUSTER_NAME=cluster-01 # kubernetes cluster name to deploy prometheus operator on
-  - export PKS_API_ENDPOINT=api.TLD # PKS API endpoint
-  - export PKS_API_ADMIN_USERNAME=admin # PKS admin username
+  OM_KEY=/Users/user/Documents/secrets/om.key  # Path to the ops manager ssh key
+  OM_ENV=/Users/user/Documents/secrets/env.yml # Path to the ops manager env.yml, that has the target,
+                                                 username, password and skip-ssl-validation params.
+  NAMESPACE=monitoring # Namespace to add/upgrade the prometheus-operator
+  CLUSTER_NAME=cluster-01 # kubernetes cluster name to deploy prometheus operator on
+  PKS_API_ENDPOINT=api.TLD # PKS API endpoint
+  PKS_API_ADMIN_USERNAME=admin # PKS admin username
 ```
 
   Sample `env.yml`
@@ -74,11 +75,11 @@ to create & configure Alertmanager and Prometheus instances using the Operator.
 * Once deployed, you can connect to the prometheus and grafana endpoints
 
 ```
-GRAFANA_URL=http://$(kubectl --namespace $NAMESPACE get svc | grep prometheus-operator-grafana | awk '{print $4}'):80
+GRAFANA_URL=http://$(kubectl --namespace $NAMESPACE get svc | grep prometheus-operator-grafana | grep LoadBalancer | awk '{print $4}'):80
 
 echo ${GRAFANA_URL}
 
-PROMETHEUS_URL=http://$(kubectl --namespace $NAMESPACE get svc | grep prometheus-operator-prometheus | awk '{print $4}'):9090
+PROMETHEUS_URL=http://$(kubectl --namespace $NAMESPACE get svc | grep prometheus-operator-prometheus | grep LoadBalancer | awk '{print $4}'):9090
 
 echo ${PROMETHEUS_URL}
 ```
