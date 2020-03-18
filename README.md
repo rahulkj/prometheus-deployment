@@ -75,11 +75,17 @@ to create & configure Alertmanager and Prometheus instances using the Operator.
 * Once deployed, you can connect to the prometheus and grafana endpoints
 
 ```
-GRAFANA_URL=http://$(kubectl --namespace $NAMESPACE get svc | grep prometheus-operator-grafana | grep LoadBalancer | awk '{print $4}'):80
+GRAFANA_URL=http://$(kubectl --namespace $NAMESPACE get svc \
+  | grep prometheus-operator-grafana \
+  | grep LoadBalancer \
+  | awk '{print $4}'):80
 
 echo ${GRAFANA_URL}
 
-PROMETHEUS_URL=http://$(kubectl --namespace $NAMESPACE get svc | grep prometheus-operator-prometheus | grep LoadBalancer | awk '{print $4}'):9090
+PROMETHEUS_URL=http://$(kubectl --namespace $NAMESPACE get svc \
+  | grep prometheus-operator-prometheus \
+  | grep LoadBalancer \
+  | awk '{print $4}'):9090
 
 echo ${PROMETHEUS_URL}
 ```
