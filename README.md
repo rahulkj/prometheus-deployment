@@ -6,13 +6,13 @@ Prometheus Operator to Monitor PKS k8s cluster
 * Copy the `.envrc.example` and create a `.envrc` file.
 * Fill in the values for:
 ```
-  OM_KEY=/Users/user/Documents/secrets/om.key  # Path to the ops manager ssh key
-  OM_ENV=/Users/user/Documents/secrets/env.yml # Path to the ops manager env.yml, that has the target,
-                                                 username, password and skip-ssl-validation params.
-  NAMESPACE=monitoring # Namespace to add/upgrade the prometheus-operator
-  CLUSTER_NAME=cluster-01 # kubernetes cluster name to deploy prometheus operator on
-  PKS_API_ENDPOINT=api.TLD # PKS API endpoint
-  PKS_API_ADMIN_USERNAME=admin # PKS admin username
+OM_KEY=/Users/user/Documents/secrets/om.key  # Path to the ops manager ssh key
+OM_ENV=/Users/user/Documents/secrets/env.yml # Path to the ops manager env.yml, that has the target,
+                                               username, password and skip-ssl-validation params.
+NAMESPACE=monitoring # Namespace to add/upgrade the prometheus-operator
+CLUSTER_NAME=cluster-01 # kubernetes cluster name to deploy prometheus operator on
+PKS_API_ENDPOINT=api.TLD # PKS API endpoint
+PKS_API_ADMIN_USERNAME=admin # PKS admin username
 ```
 
   Sample `env.yml`
