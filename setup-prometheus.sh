@@ -55,12 +55,12 @@ service_type="LoadBalancer"
 if [[ "$USE_ISTIO" == "true" ]]; then
   SERVICE_TYPE="ClusterIP"
   istioctl manifest apply --set profile=default --skip-confirmation
-  kubectl apply -f istio.yaml --overwrite=true
+  kubectl apply -f istio/istio-gateway-virtual-service.yaml --overwrite=true
 
   set +e
   prometheus_port_exists=$(kubectl get svc istio-ingressgateway -n istio-system -o yaml | grep 9090)
   if [ -z "$prometheus_port_exists" ]; then
-    kubectl patch svc istio-ingressgateway -n istio-system --patch "$(cat ingress-gateway-patch.yaml)"
+    kubectl patch svc istio-ingressgateway -n istio-system --patch "$(cat istio/ingress-gateway-patch.yaml)"
   fi
   set -e
 fi

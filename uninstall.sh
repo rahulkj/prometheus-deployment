@@ -6,7 +6,7 @@ pks login -a https://${PKS_API_ENDPOINT} -u ${PKS_API_ADMIN_USERNAME} -k -p ${pk
 
 echo "${pks_api_password}" | pks get-credentials ${CLUSTER_NAME}
 
-kubectl delete -f istio.yaml
+kubectl delete -f istio/istio-gateway-virtual-service.yaml
 
 helm uninstall "${RELEASE}" -n ${NAMESPACE}
 
