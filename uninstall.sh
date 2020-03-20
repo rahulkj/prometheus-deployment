@@ -1,20 +1,19 @@
 #!/usr/bin/env bash
 
-namespace="${1:-"monitoring"}"
-release="${2:-prometheus-operator}"
+pks_api_password=$(om -e ${OM_ENV} credentials -p pivotal-container-service -c ".properties.uaa_admin_password" -t json | jq -r '.secret')
 
-PKS_API_PASSWORD=$(om -e ${OM_ENV} credentials -p pivotal-container-service -c ".properties.uaa_admin_password" -t json | jq -r '.secret')
+pks login -a https://${PKS_API_ENDPOINT} -u ${PKS_API_ADMIN_USERNAME} -k -p ${pks_api_password}
 
-pks login -a https://${PKS_API_ENDPOINT} -u ${PKS_API_ADMIN_USERNAME} -k -p ${PKS_API_PASSWORD}
-
-echo "${PKS_API_PASSWORD}" | pks get-credentials ${CLUSTER_NAME}
+echo "${pks_api_password}" | pks get-credentials ${CLUSTER_NAME}
 
 kubectl delete -f istio.yaml
 
-helm uninstall "${release}" -n ${namespace}
+helm uninstall "${RELEASE}" -n ${NAMESPACE}
 
-kubectl delete secret -n "${namespace}" etcd-client --ignore-not-found
+kubectl delete secret -n "${NAMESPACE}" etcd-client --ignore-not-found
 
 if [[ "$USE_ISTIO" == "true" ]]; then
   istioctl manifest generate | kubectl delete -f -
 fi
+
+kubectl delete ns "${NAMESPACE}"

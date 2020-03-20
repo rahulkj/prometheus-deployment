@@ -1,7 +1,8 @@
 export OM_KEY=/Users/user/Documents/secrets/om.key
 export OM_ENV=/Users/user/Documents/secrets/env.yml
-export NAMESPACE=monitoring
-export CLUSTER_NAME=cluster-02
 export PKS_API_ENDPOINT=api.TLD
 export PKS_API_ADMIN_USERNAME=admin
+export RELEASE=prometheus-operator
+export CLUSTER_NAME=cluster-02
+export NAMESPACE=monitoring
 export USE_ISTIO=true

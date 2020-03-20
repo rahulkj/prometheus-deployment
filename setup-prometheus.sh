@@ -3,26 +3,36 @@
 helm repo add stable https://kubernetes-charts.storage.googleapis.com
 helm repo update
 
-OM_TARGET=$(om interpolate --config ${OM_ENV} --path /target)
+om_target=$(om interpolate --config ${OM_ENV} --path /target)
 
-export BOSH_ALL_PROXY=ssh+socks5://ubuntu@${OM_TARGET}:22?private-key=${OM_KEY}
+export BOSH_ALL_PROXY=ssh+socks5://ubuntu@${om_target}:22?private-key=${OM_KEY}
 export CREDHUB_PROXY=${BOSH_ALL_PROXY}
 
 eval "$(om -e ${OM_ENV} bosh-env)"
 
-PKS_API_PASSWORD=$(om -e ${OM_ENV} credentials -p pivotal-container-service -c ".properties.uaa_admin_password" -t json | jq -r '.secret')
+pks_api_password=$(om -e ${OM_ENV} credentials -p pivotal-container-service -c ".properties.uaa_admin_password" -t json | jq -r '.secret')
 
-pks login -a https://${PKS_API_ENDPOINT} -u ${PKS_API_ADMIN_USERNAME} -k -p ${PKS_API_PASSWORD}
+pks login -a https://${PKS_API_ENDPOINT} -u ${PKS_API_ADMIN_USERNAME} -k -p ${pks_api_password}
 
-CLUSTER_UUID=$(pks cluster ${CLUSTER_NAME} --json | jq -r '.uuid')
+cluster_uuid=$(pks cluster ${CLUSTER_NAME} --json | jq -r '.uuid')
 
-DEPLOYMENT_NAME=service-instance_${CLUSTER_UUID}
+deployment_name=service-instance_${cluster_uuid}
 
-credhub get -n "/p-bosh/${DEPLOYMENT_NAME}/tls-etcdctl-2018-2" -k ca > etcd-client-ca.crt
-credhub get -n "/p-bosh/${DEPLOYMENT_NAME}/tls-etcdctl-2018-2" -k certificate > etcd-client.crt
-credhub get -n "/p-bosh/${DEPLOYMENT_NAME}/tls-etcdctl-2018-2" -k private_key > etcd-client.key
+credhub get -n "/p-bosh/${deployment_name}/tls-etcdctl-2018-2" -k ca > etcd-client-ca.crt
+credhub get -n "/p-bosh/${deployment_name}/tls-etcdctl-2018-2" -k certificate > etcd-client.crt
+credhub get -n "/p-bosh/${deployment_name}/tls-etcdctl-2018-2" -k private_key > etcd-client.key
 
-echo "${PKS_API_PASSWORD}" | pks get-credentials ${CLUSTER_NAME}
+echo "${pks_api_password}" | pks get-credentials ${CLUSTER_NAME}
+
+set +e
+ns=$(kubectl get ns | grep "${NAMESPACE}")
+if [ -z "$ns" ]; then
+  echo "Create ${NAMESPACE}"
+  kubectl create ns "${NAMESPACE}"
+else
+  echo "${NAMESPACE} exists"
+fi
+set -e
 
 # Create secrets for etcd client cert
 kubectl delete secret -n "${NAMESPACE}" etcd-client --ignore-not-found
@@ -31,7 +41,7 @@ kubectl create secret -n "${NAMESPACE}" generic etcd-client \
   --from-file=etcd-client.crt \
   --from-file=etcd-client.key
 
-master_ips=$(bosh -d "${DEPLOYMENT_NAME}" vms --column=Instance --column=IPs | grep master | awk '{print $2}' | sort)
+master_ips=$(bosh -d "${deployment_name}" vms --column=Instance --column=IPs | grep master | awk '{print $2}' | sort)
 master_node_ips="$(echo ${master_ips[*]})"
 export VARS_endpoints="[${master_node_ips// /, }]"
 
@@ -41,18 +51,24 @@ om interpolate \
     --vars-env VARS \
     > vars.yml
 
-SERVICE_TYPE="LoadBalancer"
+service_type="LoadBalancer"
 if [[ "$USE_ISTIO" == "true" ]]; then
   SERVICE_TYPE="ClusterIP"
   istioctl manifest apply --set profile=default --skip-confirmation
-  kubectl label namespace "${NAMESPACE}" istio-injection=enabled --overwrite
-  kubectl create -f istio.yaml
+  kubectl apply -f istio.yaml --overwrite=true
+
+  set +e
+  prometheus_port_exists=$(kubectl get svc istio-ingressgateway -n istio-system -o yaml | grep 9090)
+  if [ -z "$prometheus_port_exists" ]; then
+    kubectl patch svc istio-ingressgateway -n istio-system --patch "$(cat ingress-gateway-patch.yaml)"
+  fi
+  set -e
 fi
 
-helm upgrade -i prometheus-operator \
+helm upgrade -i "${RELEASE}" \
   --namespace "${NAMESPACE}" \
-  --set grafana.service.type=${SERVICE_TYPE} \
-  --set prometheus.service.type=${SERVICE_TYPE} \
+  --set grafana.service.type=${service_type} \
+  --set prometheus.service.type=${service_type} \
   --set grafana.adminPassword=admin \
   --set global.rbac.pspEnabled=false \
   --set grafana.testFramework.enabled=false \
