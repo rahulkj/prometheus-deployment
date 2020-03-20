@@ -41,10 +41,18 @@ om interpolate \
     --vars-env VARS \
     > vars.yml
 
+SERVICE_TYPE="LoadBalancer"
+if [[ "$USE_ISTIO" == "true" ]]; then
+  SERVICE_TYPE="ClusterIP"
+  istioctl manifest apply --set profile=default --skip-confirmation
+  kubectl label namespace "${NAMESPACE}" istio-injection=enabled --overwrite
+  kubectl create -f istio.yaml
+fi
+
 helm upgrade -i prometheus-operator \
   --namespace "${NAMESPACE}" \
-  --set grafana.service.type=LoadBalancer \
-  --set prometheus.service.type=LoadBalancer \
+  --set grafana.service.type=${SERVICE_TYPE} \
+  --set prometheus.service.type=${SERVICE_TYPE} \
   --set grafana.adminPassword=admin \
   --set global.rbac.pspEnabled=false \
   --set grafana.testFramework.enabled=false \

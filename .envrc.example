@@ -4,3 +4,4 @@ export NAMESPACE=monitoring
 export CLUSTER_NAME=cluster-02
 export PKS_API_ENDPOINT=api.TLD
 export PKS_API_ADMIN_USERNAME=admin
+export USE_ISTIO=true

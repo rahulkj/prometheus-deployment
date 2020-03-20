@@ -9,6 +9,12 @@ pks login -a https://${PKS_API_ENDPOINT} -u ${PKS_API_ADMIN_USERNAME} -k -p ${PK
 
 echo "${PKS_API_PASSWORD}" | pks get-credentials ${CLUSTER_NAME}
 
+kubectl delete -f istio.yaml
+
 helm uninstall "${release}" -n ${namespace}
 
 kubectl delete secret -n "${namespace}" etcd-client --ignore-not-found
+
+if [[ "$USE_ISTIO" == "true" ]]; then
+  istioctl manifest generate | kubectl delete -f -
+fi
