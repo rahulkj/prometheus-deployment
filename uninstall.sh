@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-pks_api_password=$(om -e ${OM_ENV} credentials -p pivotal-container-service -c ".properties.uaa_admin_password" -t json | jq -r '.secret')
+pks_api_password=$(om -t ${OM_TARGET} credentials -p pivotal-container-service -c ".properties.uaa_admin_password" -t json | jq -r '.secret')
 
 pks login -a https://${PKS_API_ENDPOINT} -u ${PKS_API_ADMIN_USERNAME} -k -p ${pks_api_password}
 

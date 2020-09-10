@@ -1,16 +1,16 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 helm repo add stable https://kubernetes-charts.storage.googleapis.com
 helm repo update
 
-om_target=$(om interpolate --config ${OM_ENV} --path /target)
+# om_target=$(om interpolate --config ${OM_ENV} --path /target)
 
-export BOSH_ALL_PROXY=ssh+socks5://ubuntu@${om_target}:22?private-key=${OM_KEY}
+export BOSH_ALL_PROXY=ssh+socks5://ubuntu@${OM_TARGET}:22?private-key=${OM_KEY}
 export CREDHUB_PROXY=${BOSH_ALL_PROXY}
 
-eval "$(om -e ${OM_ENV} bosh-env)"
+eval "$(om -t ${OM_TARGET} bosh-env)"
 
-pks_api_password=$(om -e ${OM_ENV} credentials -p pivotal-container-service -c ".properties.uaa_admin_password" -t json | jq -r '.secret')
+pks_api_password=$(om -t ${OM_TARGET} credentials -p pivotal-container-service -c ".properties.uaa_admin_password" -t json | jq -r '.secret')
 
 pks login -a https://${PKS_API_ENDPOINT} -u ${PKS_API_ADMIN_USERNAME} -k -p ${pks_api_password}
 
@@ -53,7 +53,7 @@ om interpolate \
 
 service_type="LoadBalancer"
 if [[ "$USE_ISTIO" == "true" ]]; then
-  SERVICE_TYPE="ClusterIP"
+  service_type="ClusterIP"
   istioctl manifest apply --set profile=default --skip-confirmation
   kubectl apply -f istio/istio-gateway-virtual-service.yaml --overwrite=true
 
